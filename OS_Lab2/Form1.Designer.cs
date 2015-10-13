@@ -162,7 +162,6 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button startButton;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         public System.Windows.Forms.TextBox logText;
@@ -170,6 +169,7 @@
         public System.Windows.Forms.ComboBox nominalText;
         public System.Windows.Forms.TextBox resText;
         public System.Windows.Forms.TextBox restText;
+        public System.Windows.Forms.Button startButton;
     }
 }
 

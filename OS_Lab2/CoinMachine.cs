@@ -10,6 +10,8 @@ namespace OS_Lab2
 {
     class CoinMachine
     {
+        Semaphore s_rec = new Semaphore(1, 1);
+        Semaphore s_xch = new Semaphore(0, 1);
         public int[] nominals = { 1, 2, 5, 10, 25, 50, 100 };
         public int[] counts = { 10, 10, 10, 5, 2, 2, 2 };
         private int mail_box = 0;
@@ -25,11 +27,13 @@ namespace OS_Lab2
             rec_thread.Start();
             //form.logText.AppendText("Starting exchanger.\n");
             xch_thread.Start();
+
         }
 
         private void run_recognizer()
         {
             var form = Form.ActiveForm as appForm;
+            form.startButton.Enabled = false;
 
             recognizer(Int32.Parse(form.inputText.Text));
         }
@@ -38,17 +42,20 @@ namespace OS_Lab2
         {
             var form = Form.ActiveForm as appForm;
 
-            Thread.Sleep(200);
-            exchanger(mail_box, Int32.Parse(form.nominalText.Text));
+            exchanger(Int32.Parse(form.nominalText.Text));
             
+            form.startButton.Enabled = true;
         }
 
         private void recognizer(int nominal)
         {
+            s_rec.WaitOne();
+            
             var form = Form.ActiveForm as appForm;
 
             form.logText.AppendText("Recognizing\n");
-            Thread.Sleep(100);
+            Thread.Sleep(3000);
+
             if (Array.BinarySearch(nominals, nominal) >= 0){
                 mail_box = nominal;
                 form.logText.AppendText(String.Format("{0} recognized\n", nominal.ToString()));
@@ -57,19 +64,22 @@ namespace OS_Lab2
             {
                 form.logText.AppendText(String.Format("Unknown nominal {0}\n", nominal.ToString()));
             }
-
+            s_xch.Release();
         }
 
-        private void exchanger(int nominal, int max_nom)
+        private void exchanger(int max_nom)
         {
+            s_xch.WaitOne();
+            
             var form = Form.ActiveForm as appForm;
 
             form.logText.AppendText("Exchanging\n");
-            Thread.Sleep(200);
-            if (max_nom <= nominal)
+            Thread.Sleep(1000);
+
+            if (max_nom <= mail_box)
             {
                 List<int> res = new List<int>();
-                int rest = nominal;
+                int rest = mail_box;
 
                 int ind = Array.BinarySearch(nominals, max_nom);
                 int [] tmp_arr = new int[ind + 1];
@@ -104,9 +114,10 @@ namespace OS_Lab2
             }
             else
             {
-                form.logText.AppendText("Exchange nominal is greater then inserted coin.\n");
+                form.logText.AppendText(String.Format("Cannot exchange. {0} > {1}\n", max_nom, mail_box));
             }
             mail_box = 0;
+            s_rec.Release();
         }
     }
 }
